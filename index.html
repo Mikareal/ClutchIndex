@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClutchIndex — LEGO Inventory Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="border-b sticky top-0 z-50 glass border-[var(--border-medium)] shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="CI_LOGO.png" alt="CI Logo" class="w-10 h-10 object-contain">
+                <h1 class="text-xl font-bold tracking-tight uppercase">CLUTCH<span class="text-accent">INDEX</span></h1>
+            </div>
+            
+            <div class="flex items-center gap-6 text-sm">
+                <div class="flex gap-1 p-1 rounded-sm border border-[var(--border-light)] bg-[var(--bg-tertiary)]">
+                    <button id="viewTable" class="btn-layout uppercase tracking-wider text-xs px-4 py-2">Table</button>
+                    <button id="viewGrid" class="btn-layout uppercase tracking-wider text-xs px-4 py-2">Cards</button>
+                </div>
+
+                <div class="flex items-center gap-3 px-3 py-2 border-l border-white/5">
+                    <span class="text-[var(--text-tertiary)] text-[10px] font-bold uppercase tracking-widest">Density</span>
+                    <button id="densityToggle" class="w-8 h-4 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] relative overflow-hidden">
+                        <div id="densityIndicator" class="absolute top-0 left-0 w-1/2 h-full bg-accent transition-all duration-300"></div>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-1 border-l border-[var(--border-light)] pl-4">
+                    <button onclick="refreshAllParts()" class="p-2 text-secondary hover:text-accent transition-all hover:scale-110" title="Sync All from API">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </button>
+                    <button onclick="exportData()" class="px-3 py-2 font-semibold text-xs uppercase tracking-wider hover:bg-white/5 active:scale-95 transition-all">
+                        Export
+                    </button>
+                    <button onclick="openExportSettings()" class="p-2 text-secondary hover:text-accent transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                    </button>
+                </div>
+
+                <button onclick="toggleColorSidebar()" class="p-2 text-secondary hover:text-accent transition-colors" title="Color Reference">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+                </button>
+
+                <button onclick="openSettings()" class="p-2 text-secondary hover:text-accent transition-colors" title="Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </button>
+
+                <button onclick="openResetModal()" class="px-4 py-2 font-semibold text-xs uppercase tracking-wider text-red-400 hover:bg-red-500/10 active:scale-95 transition-all rounded-md border border-red-500/30 hover:border-red-500/50">Purge</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Color Reference Sidebar -->
+    <div id="colorSidebar" class="fixed inset-y-0 right-0 w-80 bg-[var(--bg-secondary)] border-l border-[var(--border-medium)] z-[120] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <div class="p-6 border-b border-[var(--border-medium)] flex justify-between items-center">
+            <h2 class="text-accent text-lg tracking-wide uppercase">Color Reference</h2>
+            <button onclick="toggleColorSidebar()" class="text-slate-500 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-4 border-b border-[var(--border-medium)]">
+            <input type="text" id="colorSearch" placeholder="Search by name or ID..." class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-4 py-3 text-xs text-[var(--text-main)] outline-none focus:border-accent placeholder:text-slate-600 transition-colors">
+        </div>
+        <div id="colorList" class="flex-grow overflow-y-auto p-4 space-y-1 custom-scrollbar">
+            <!-- Populated via JS -->
+        </div>
+        <div class="p-4 border-t border-[var(--border-medium)] text-[9px] text-slate-500 uppercase tracking-wider text-center">
+            Click to copy
+        </div>
+    </div>
+
+    <!-- General Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-md hidden modal-fade">
+        <div class="glass w-full max-w-md p-8 shadow-2xl">
+            <h2 class="text-[var(--text-main)] text-lg font-semibold mb-8 tracking-wide uppercase">Settings</h2>
+            <div class="space-y-6">
+                <div class="pb-6 border-b border-[var(--border-medium)]">
+                    <h3 class="text-[10px] text-slate-500 uppercase mb-4 tracking-wider">Theme</h3>
+                    <div class="space-y-4">
+                        <select id="themeSelect" onchange="setTheme(this.value)" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-4 py-3 text-xs outline-none focus:border-accent transition-colors cursor-pointer" style="color: inherit">
+                            <option value="cyan">Cyan (Default)</option>
+                            <option value="blue">Blue</option>
+                            <option value="purple">Purple</option>
+                            <option value="green">Emerald</option>
+                            <option value="rose">Rose</option>
+                            <option value="amber">Amber</option>
+                            <option value="bw">Black / White</option>
+                            <option value="custom">Custom / User</option>
+                        </select>
+                        <div id="customColorPicker" class="hidden pt-1">
+                            <input type="color" oninput="updateCustomColor(this.value)"
+                                   class="w-full h-10 bg-transparent border border-[var(--border-medium)] cursor-pointer rounded p-1">
+                        </div>
+                    </div>
+                </div>
+                <div class="pb-6 border-b border-[var(--border-medium)]">
+                    <h3 class="text-[10px] text-slate-500 uppercase mb-3 tracking-wider">Appearance</h3>
+                    <select id="modeSelect" onchange="setMode(this.value)" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-4 py-3 text-xs outline-none focus:border-accent transition-colors cursor-pointer" style="color: inherit">
+                        <option value="dark">Night Mode (Dark)</option>
+                        <option value="light">Day Mode (Light)</option>
+                    </select>
+                </div>
+                <div class="pb-6 border-b border-[var(--border-medium)]">
+                    <h3 class="text-[10px] text-slate-500 uppercase mb-3 tracking-wider">Data</h3>
+                    <button onclick="downloadBackup()" class="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all">Download Backup</button>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-center">
+                <button onclick="closeSettings()" class="px-8 py-2 text-xs uppercase text-slate-500 border border-white/10 hover:text-white hover:border-white/30 transition-all">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Settings Modal -->
+    <div id="exportSettingsModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-md hidden modal-fade" style="background: var(--bg-main)">
+        <div class="glass w-full max-w-md p-8 shadow-2xl">
+            <h2 class="text-[var(--text-main)] text-lg font-semibold mb-6 tracking-wide uppercase text-center">Export Configuration</h2>
+            <div class="space-y-4">
+                <label class="block text-[10px] text-slate-500 uppercase mb-2">Format</label>
+                <div>
+                    <label class="block text-[10px] text-slate-500 uppercase mb-2">Filename</label>
+                    <input type="text" id="exportFilename" placeholder="clutch_ledger" class="w-full bg-white/5 border border-white/10 px-4 py-2 text-sm outline-none focus:border-accent focus:bg-white/10 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 uppercase mb-2">Format & Separator</label>
+                    <select id="exportFormat" class="w-full bg-white/5 border border-white/10 px-4 py-2 text-sm outline-none focus:border-accent focus:bg-white/10 transition-colors">
+                        <option value="json_ci" selected>ClutchIndex JSON (.json)</option>
+                        <option value="xlsx">Excel (.xlsx)</option>
+                        <option value="csv">CSV (Comma ,)</option>
+                        <option value="csv_semi">CSV (Semicolon ;)</option>
+                        <option value="txt">TXT (Tab Delimited)</option>
+                        <option value="xml_bl">BrickLink Wanted List (XML)</option>
+                        <option value="bl_mass">BrickLink Mass Search (TXT)</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-3 pt-2">
+                    <input type="checkbox" id="exportIncludeDesc" checked class="w-4 h-4">
+                    <label for="exportIncludeDesc" class="text-xs text-slate-300 uppercase tracking-wider">Include Description</label>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-center gap-4">
+                <button onclick="closeExportSettings()" class="px-8 py-2 text-xs uppercase text-slate-500 border border-[var(--border-medium)] hover:text-[var(--text-main)] transition-colors">Discard</button>
+                <button onclick="closeExportSettings()" class="bg-accent text-black px-8 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-accent/90">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Part Inspection Modal -->
+    <div id="inspectionModal" class="fixed inset-0 z-[80] flex items-center justify-center bg-black/95 backdrop-blur-xl hidden modal-fade" onclick="closeInspection()" style="background: var(--bg-header)">
+        <div class="relative max-w-4xl p-4">
+            <img id="inspectionImg" src="" class="max-h-[80vh] shadow-2xl border border-white/10 rounded">
+            <div id="inspectionText" class="mt-4 text-center">
+                <div id="inspectionID" class="text-accent font-mono font-bold text-2xl tracking-wider"></div>
+                <div id="inspectionName" class="text-slate-400 italic text-sm mt-1"></div>
+            </div>
+            <button class="absolute -top-10 right-0 text-white/50 hover:text-white text-3xl">&times;</button>
+        </div>
+    </div>
+
+    <!-- Batch Paste Overlay -->
+    <div id="batchPasteOverlay" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-sm hidden modal-fade">
+        <div class="bg-[var(--bg-secondary)] w-full max-w-2xl p-8 border border-[var(--border-medium)]">
+            <h2 class="text-[var(--text-main)] text-lg font-semibold mb-4 tracking-wide uppercase text-center">Batch Import</h2>
+            <p class="text-[10px] text-slate-400 uppercase mb-4 tracking-wider text-center">Format: <span class="text-white font-mono">PART_ID ; QTY ; COLOR_ID</span> <span class="text-slate-600">(Color optional)</span></p>
+            <textarea id="batchPasteArea" placeholder="3001 ; 10&#10;3002 ; 5" class="w-full h-64 bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-4 py-4 font-mono text-sm outline-none focus:border-accent transition-colors mb-6 placeholder:text-slate-700"></textarea>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeBatchPaste()" class="px-6 py-2 text-xs uppercase text-slate-500 hover:text-white transition-colors">Cancel</button>
+                <button onclick="submitBatchPaste()" id="batchSubmitBtn" class="bg-accent text-black px-6 py-2 text-sm font-semibold uppercase tracking-wider hover:bg-accent/90 transition-colors">Process</button>
+            </div>
+            <div id="batchProgress" class="hidden mt-4 text-center text-[10px] text-accent uppercase tracking-wider">
+                Importing <span id="batchCurrent">0</span>/<span id="batchTotal">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Confirmation Overlay -->
+    <div id="resetOverlay" class="fixed inset-0 z-[90] flex items-center justify-center bg-black/95 backdrop-blur-md hidden modal-fade" style="background: var(--bg-header)">
+        <div class="bg-[var(--bg-secondary)] w-full max-w-sm p-8 border-2 border-red-500 text-center">
+            <h2 class="text-red-500 text-xl mb-4 tracking-widest uppercase">Inventory Reset</h2>
+            <p class="text-slate-400 text-xs mb-6 leading-relaxed uppercase tracking-tighter">Warning: This will purge all stored inventory data. This action is permanent.</p>
+            
+            <div class="mb-6">
+                <span class="text-[10px] text-slate-500 uppercase tracking-[0.3em] block mb-2">Type "PURGE" to confirm</span>
+                <span id="resetCodeDisplay" class="hidden"></span>
+            </div>
+
+            <input type="text" id="resetConfirmInput" placeholder="PURGE" class="w-full bg-[var(--bg-tertiary)] border border-red-500/30 px-4 py-3 text-center text-xl mono outline-none focus:border-red-500 transition-colors mb-6">
+            
+            <div class="flex gap-4">
+                <button onclick="closeResetModal()" class="flex-1 px-4 py-2 border border-[var(--border-medium)] text-xs uppercase tracking-widest hover:bg-white/5 transition-colors">Abort</button>
+                <button onclick="confirmReset()" class="flex-1 px-4 py-2 bg-red-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-red-500 transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)]">Purge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Entry Overlay -->
+    <div id="quickEntryOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm hidden modal-fade">
+        <div class="bg-[var(--bg-secondary)] w-full max-w-lg p-8 border border-[var(--border-medium)]">
+            <h2 class="text-[var(--text-main)] text-lg font-semibold mb-6 tracking-wide uppercase text-center">Quick Add</h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-1">
+                    <label class="block text-[10px] text-slate-500 uppercase mb-2 tracking-wider">Part ID</label>
+                    <input type="text" id="quickPartID" placeholder="3001" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-3 py-4 text-xl font-mono focus:border-accent outline-none transition-colors">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] text-slate-500 uppercase mb-2 tracking-wider">Quantity</label>
+                    <input type="number" id="quickCount" placeholder="1" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-3 py-4 text-xl font-mono focus:border-accent outline-none transition-colors">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] text-slate-500 uppercase mb-2 tracking-wider">Color ID</label>
+                    <input type="text" id="quickColor" placeholder="0" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-3 py-4 text-xl font-mono focus:border-accent outline-none transition-colors">
+                </div>
+            </div>
+            <div class="mt-8 flex flex-col items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="quickBatchMode" class="w-4 h-4 accent-cyan-400">
+                    <label for="quickBatchMode" class="text-[10px] text-slate-400 uppercase tracking-wider">Keep window open</label>
+                </div>
+                <span class="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider"><kbd>Enter</kbd> submit • <kbd>Esc</kbd> close</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid Edit Modal -->
+    <div id="gridEditOverlay" class="fixed inset-0 z-[105] flex items-center justify-center bg-black/90 backdrop-blur-sm hidden modal-fade">
+        <div class="bg-[var(--bg-secondary)] w-full max-w-xs p-6 border border-[var(--border-medium)]">
+            <h2 class="text-[var(--text-main)] text-xs mb-4 tracking-wider uppercase text-center font-semibold">Edit Entry</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[8px] text-slate-500 uppercase mb-1 tracking-wider">Part Number</label>
+                    <input type="text" id="gridEditID" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-3 py-2 text-sm font-mono outline-none focus:border-accent transition-colors">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[8px] text-slate-500 uppercase mb-1 tracking-wider">Color ID</label>
+                        <input type="text" id="gridEditColor" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-3 py-2 text-sm font-mono outline-none focus:border-accent transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[8px] text-slate-500 uppercase mb-1 tracking-wider">Quantity</label>
+                        <input type="number" id="gridEditQty" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-3 py-2 text-sm font-mono outline-none focus:border-accent transition-colors">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex gap-2">
+                <button onclick="closeGridEdit()" class="flex-1 px-4 py-2 text-[10px] uppercase text-slate-500 hover:text-[var(--text-main)] transition-colors">Cancel</button>
+                <button onclick="saveGridEdit()" class="flex-1 bg-accent text-black py-2 text-[10px] font-semibold uppercase tracking-wider hover:bg-accent/90 transition-colors">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-6 py-12">
+        <!-- Import Section -->
+        <section class="mb-12 border-l-2 border-accent bg-white/5 p-8 rounded-r" style="background: var(--bg-surface); border-color: var(--accent)">
+            <h2 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-6 opacity-60">Add Inventory</h2>
+            <div class="flex flex-wrap gap-8 items-end">
+                <div class="flex-grow max-w-md">
+                    <label class="block text-xs text-slate-400 mb-2 uppercase tracking-wider">Upload file</label>
+                    <input type="file" id="fileInput" accept=".csv, .xlsx, .txt, .json" class="block w-full text-sm text-slate-400 file:mr-6 file:py-2.5 file:px-4 file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer border border-[var(--border-medium)] bg-white/5 focus:outline-none focus:border-accent focus:bg-white/10 transition-colors" accept-file-formats="XLSX, CSV, TXT, JSON"/>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="openQuickEntry()" class="bg-accent hover:bg-accent/90 text-black px-6 py-3 text-xs font-semibold uppercase tracking-wider transition-all active:scale-95">Add Single</button>
+                    <button onclick="openBatchPaste()" class="border border-white/20 text-white px-6 py-3 text-xs font-semibold uppercase tracking-wider transition-all hover:bg-white/5 hover:border-white/30 active:scale-95">Add Batch</button>
+                </div>
+
+                <!-- Mapper UI (Hidden until file selected) -->
+                <div id="mapperUI" class="hidden flex-col gap-6 animate-fade w-full mt-6 pt-6 border-t border-[var(--border-medium)]">
+                    <div id="importPreview" class="hidden overflow-x-auto bg-black/40 border border-[var(--border-medium)] rounded custom-scrollbar mb-4" style="background: var(--bg-surface)">
+                        <table class="w-full text-left border-collapse text-[10px] mono">
+                            <thead id="previewHead"></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="flex flex-wrap gap-4 items-end">
+                    <div class="w-40">
+                        <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider">Part Number</label>
+                        <select id="mapPartID" class="w-full bg-white/5 border border-[var(--border-medium)] px-3 py-2 text-sm text-white focus:border-accent outline-none transition-colors" style="color: var(--text-main)"></select>
+                    </div>
+                    <div class="w-40">
+                        <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider">Quantity</label>
+                        <select id="mapQty" class="w-full bg-white/5 border border-[var(--border-medium)] px-3 py-2 text-sm text-white focus:border-accent outline-none transition-colors" style="color: var(--text-main)"></select>
+                    </div>
+                    <div class="w-40">
+                        <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider">Description</label>
+                        <select id="mapDesc" class="w-full bg-white/5 border border-[var(--border-medium)] px-3 py-2 text-sm text-white focus:border-accent outline-none transition-colors" style="color: var(--text-main)"></select>
+                    </div>
+                    <div class="w-40">
+                        <label class="block text-xs text-slate-400 mb-1 uppercase tracking-wider">Color ID</label>
+                        <select id="mapColor" class="w-full bg-white/5 border border-[var(--border-medium)] px-3 py-2 text-sm text-white focus:border-accent outline-none transition-colors" style="color: var(--text-main)"></select>
+                    </div>
+                    <button onclick="processImport()" id="importBtn" class="bg-accent hover:bg-accent/90 text-black px-6 py-2 text-sm font-semibold transition-all active:scale-95 uppercase tracking-wider">Import</button>
+                    <button onclick="cancelImport()" class="border border-white/10 text-slate-500 hover:text-white px-6 py-2 text-sm font-semibold transition-all active:scale-95 uppercase tracking-wider">Cancel</button>
+                    </div>
+                    <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-2">Map the columns from your file to the correct inventory fields above</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Layout Container -->
+        <div id="layoutContainer">
+            <!-- Empty State -->
+            <div id="emptyState" class="py-40 text-center hidden border border-dashed border-[var(--border-medium)] rounded">
+                <div class="text-white/20 mb-4 font-semibold tracking-wider text-xl uppercase">No inventory yet</div>
+                <div class="text-[10px] text-slate-600 uppercase tracking-wider">Upload a file, add manually, or batch import to get started</div>
+            </div>
+
+            <!-- Table View -->
+            <div id="tableView" class="border border-[var(--border-medium)] bg-black/40 rounded" style="background: var(--bg-surface)">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead style="background: var(--bg-surface)">
+                            <tr class="bg-white/5 text-slate-500 text-[9px] font-semibold uppercase tracking-wider border-b border-[var(--border-medium)]">
+                                <th class="px-4 py-3 w-[80px] text-center">Image</th>
+                                <th class="px-4 py-3 w-[160px] text-center">Part ID</th>
+                                <th class="px-4 py-3">Description</th>
+                                <th class="px-4 py-3 w-[120px]">Color</th>
+                                <th class="px-6 py-3 w-[100px] text-right">Qty</th>
+                                <th class="px-4 py-3 w-[80px] text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody" class="divide-y border-[var(--border-medium)]"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="gridView" class="hidden grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-px bg-white/5 border border-[var(--border-medium)] rounded" style="background: var(--bg-surface)">
+                <!-- Grid items generated by JS -->
+            </div>
+        </div>
+    </main>
+    <!-- Application Modules (loaded in dependency order) -->
+    <script src="js/state.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/data-import-export.js"></script>
+    <script src="js/events.js"></script>
+    <!-- Main Application -->
+    <script src="app.js"></script>
+</body>
+</html>

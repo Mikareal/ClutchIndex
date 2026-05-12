@@ -1,0 +1,460 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --accent: #06b6d4; /* Default Cyan */
+    --accent-rgb: 6, 182, 212;
+    --bg-main: #05070a;
+    --bg-secondary: #0c0f16;
+    --bg-tertiary: #121721;
+    --bg-hover: #1a202e;
+    --text-main: #e4e6eb;
+    --text-secondary: #b0b3be;
+    --text-tertiary: #7a7e8c;
+    --border-light: rgba(255, 255, 255, 0.05);
+    --border-medium: rgba(255, 255, 255, 0.1);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Theme Variations */
+html[data-theme="cyan"] { --accent: #06b6d4; --accent-rgb: 6, 182, 212; }
+html[data-theme="blue"] { --accent: #3b82f6; --accent-rgb: 59, 130, 246; }
+html[data-theme="purple"] { --accent: #a855f7; --accent-rgb: 168, 85, 247; }
+html[data-theme="green"] { --accent: #10b981; --accent-rgb: 16, 185, 129; }
+html[data-theme="rose"] { --accent: #f43f5e; --accent-rgb: 244, 63, 94; }
+html[data-theme="amber"] { --accent: #f59e0b; --accent-rgb: 245, 158, 11; }
+html[data-theme="bw"] { --accent: #ffffff; --accent-rgb: 255, 255, 255; }
+
+/* Flip BW accent in Light Mode so it's visible against white backgrounds */
+html[data-mode="light"][data-theme="bw"] { 
+    --accent: #000000; 
+    --accent-rgb: 0, 0, 0; 
+}
+
+/* Explicit Dark Mode Variables */
+html[data-mode="dark"] {
+    --bg-main: #05070a;
+    --bg-secondary: #0c0f16;
+    --bg-tertiary: #121721;
+    --bg-hover: #1a202e;
+    --text-main: #e4e6eb;
+    --text-secondary: #b0b3be;
+    --text-tertiary: #7a7e8c;
+    --border-light: rgba(255, 255, 255, 0.05);
+    --border-medium: rgba(255, 255, 255, 0.1);
+}
+
+html[data-mode="light"] {
+    --bg-main: #f1f5f9;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f8fafc;
+    --bg-hover: #f1f5f9;
+    --text-main: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+    --border-light: rgba(0, 0, 0, 0.06);
+    --border-medium: rgba(0, 0, 0, 0.12);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+body { 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 { 
+    font-weight: 600; 
+    letter-spacing: -0.015em;
+    color: var(--text-main);
+}
+
+.mono { 
+    font-family: 'JetBrains Mono', 'Monaco', 'Courier New', monospace; 
+    font-size: 0.85em;
+    letter-spacing: 0.02em;
+}
+
+/* Text Utilities */
+.text-accent { color: var(--accent); }
+.bg-accent { background-color: var(--accent); }
+
+/* Scrollbar Styling */
+.custom-scrollbar::-webkit-scrollbar { 
+    width: 8px; 
+    height: 8px; 
+}
+.custom-scrollbar::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: rgba(var(--accent-rgb), 0.3); 
+    border-radius: 4px; 
+    transition: background 0.3s;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+    background: rgba(var(--accent-rgb), 0.6); 
+}
+
+/* Button Styling */
+button {
+    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* Layout Buttons */
+.btn-layout {
+    height: 28px;
+    padding: 0 1rem;
+    font-size: 10px;
+    min-width: 75px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+}
+
+.btn-layout.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+
+/* Ensure text visibility when the accent is white (BW theme in Dark Mode) */
+html[data-mode="dark"][data-theme="bw"] .btn-layout.active {
+    color: #000;
+}
+
+.btn-layout:not(.active):hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+}
+
+/* Select Options */
+select option { 
+    background: var(--bg-secondary); 
+    color: var(--text-main);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(8px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes modalIn {
+    from { 
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade { animation: fadeIn 0.3s ease-out; }
+.animate-slide { animation: slideIn 0.3s ease-out; }
+.modal-fade { animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Glass & Card Effects */
+.glass { 
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-medium);
+    backdrop-filter: blur(8px);
+    border-radius: 2px;
+}
+
+.card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    border-color: var(--border-medium);
+    box-shadow: var(--shadow-md);
+}
+
+/* Input Elements */
+input, select, textarea {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    color: var(--text-main);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: inherit;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--text-tertiary);
+}
+
+input:hover, select:hover, textarea:hover {
+    border-color: var(--border-medium);
+    background: var(--bg-hover);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg-hover);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+
+/* Checkboxes & Radios */
+input[type="checkbox"],
+input[type="radio"] {
+    appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 1.5px solid var(--border-medium);
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+input[type="radio"] {
+    border-radius: 50%;
+}
+
+input[type="checkbox"]:hover,
+input[type="radio"]:hover {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.05);
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.75rem;
+    color: #000;
+}
+
+/* Contenteditable */
+[contenteditable]:focus {
+    outline: 1px solid var(--accent);
+    background: rgba(var(--accent-rgb), 0.05) !important;
+    border-radius: 2px;
+    padding: 0;
+}
+
+/* Inline Editable */
+.inline-editable {
+    cursor: text;
+    position: relative;
+    transition: all 0.15s ease;
+    border-radius: 3px;
+    border: 1px solid transparent;
+}
+
+.inline-editable:hover {
+    background: rgba(var(--accent-rgb), 0.03);
+    border-color: var(--border-medium);
+}
+
+/* File Input */
+input[type="file"] {
+    padding: 0;
+}
+
+input[type="file"]::file-selector-button {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+    filter: brightness(1.15);
+}
+
+/* Typography */
+.text-tiny { font-size: 0.65rem; line-height: 1rem; }
+
+/* Compact Mode */
+.compact-row { 
+    height: 40px !important; 
+}
+.compact-row td { 
+    padding: 0 4px !important; 
+    font-size: 0.75rem; 
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Hover Effects */
+.hover-preview {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: var(--shadow-lg);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.preview-container:hover .hover-preview { 
+    display: block; 
+    animation: fadeIn 0.2s ease-out;
+}
+
+.img-glow { 
+    transition: filter 0.3s ease;
+}
+
+/* Spinning animation for the sync button */
+@keyframes spin-once {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.sync-btn:hover svg { animation: spin-once 0.5s ease-in-out; }
+
+/* Table Styling */
+table {
+    table-layout: fixed;
+    width: 100%;
+    background: var(--bg-secondary);
+}
+
+thead tr {
+    background: rgba(var(--accent-rgb), 0.05);
+    border-bottom: 2px solid var(--border-medium);
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: inset 4px 0 0 var(--accent);
+}
+
+td, th {
+    color: var(--text-main);
+    padding: 0.75rem 1rem;
+}
+
+th {
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Modal Styling */
+.modal-fade {
+    animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Section Styling */
+section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+section:hover {
+    border-color: var(--border-medium);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.05);
+}
+
+/* Grid Styling */
+.grid-view-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.grid-view-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0) 0%, rgba(var(--accent-rgb), 0.05) 100%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.grid-view-item:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+}
+
+.grid-view-item:hover::before {
+    opacity: 1;
+}
+
+/* Empty State */
+.empty-state {
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+    margin-bottom: 1rem;
+}
