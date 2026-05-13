@@ -202,6 +202,10 @@ function openSettings() {
     // Ensure dropdowns reflect current state
     const themeSelect = document.getElementById('themeSelect');
     if (themeSelect) themeSelect.value = currentTheme;
+
+    // Update API Key field
+    const apiKeyInput = document.getElementById('settingsApiKey');
+    if (apiKeyInput) apiKeyInput.value = userApiKey;
     
     // Update color display checkboxes
     const colorTextToggle = document.getElementById('colorTextToggle');

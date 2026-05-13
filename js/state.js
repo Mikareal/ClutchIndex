@@ -20,6 +20,7 @@ let showColorText = localStorage.getItem('clutchIndex_showColorText') !== 'false
 let showColorSquares = localStorage.getItem('clutchIndex_showColorSquares') !== 'false'; // Show color squares next to color ID
 let instantColorTranslation = localStorage.getItem('clutchIndex_instantTranslation') === 'true'; // Show names instead of IDs
 let showThemeToggle = localStorage.getItem('clutchIndex_showThemeToggle') === 'true'; // Visibility of the header toggle (defaults to false)
+let userApiKey = localStorage.getItem('clutchIndex_userApiKey') || ''; // User-provided Rebrickable key
 
 // --- State Persistence ---
 /**
@@ -94,6 +95,15 @@ function toggleShowThemeToggle() {
     showThemeToggle = !showThemeToggle;
     localStorage.setItem('clutchIndex_showThemeToggle', showThemeToggle);
     applyThemeToggleVisibility();
+}
+
+/**
+ * Save User API Key
+ */
+function saveUserApiKey(key) {
+    userApiKey = key.trim();
+    localStorage.setItem('clutchIndex_userApiKey', userApiKey);
+    fetchColors().then(() => renderInventory());
 }
 
 /**

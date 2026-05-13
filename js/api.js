@@ -8,14 +8,17 @@
  * Fetch all available LEGO colors from Rebrickable API
  */
 async function fetchColors() {
-    if (typeof API_KEY === 'undefined' || !API_KEY || API_KEY.includes('your_rebrickable')) {
-        console.error('ClutchIndex: API_KEY is missing or invalid. Check config.js');
+    // Priority: 1. User-provided key in storage | 2. Hardcoded key in config.js
+    const activeKey = userApiKey || (typeof API_KEY !== 'undefined' ? API_KEY : '');
+
+    if (!activeKey || activeKey.includes('your_rebrickable')) {
+        console.warn('ClutchIndex: No valid API_KEY found. Please enter one in Settings.');
         return [];
     }
 
     try {
         const response = await fetch(`https://rebrickable.com/api/v3/lego/colors/?page_size=1000&ordering=name`, {
-            headers: { 'Authorization': `key ${API_KEY}` }
+            headers: { 'Authorization': `key ${activeKey}` }
         });
         
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
@@ -50,6 +53,8 @@ function isValidColorID(str) {
  */
 async function fetchPartData(id, colorID = null) {
     const cleanID = String(id).trim().replace(/\.0$/, '');
+    const activeKey = userApiKey || (typeof API_KEY !== 'undefined' ? API_KEY : '');
+
     try {
         const isElement = cleanID.length >= 6 && !isNaN(cleanID);
         
@@ -64,7 +69,7 @@ async function fetchPartData(id, colorID = null) {
         }
 
         const response = await fetch(url, {
-            headers: { 'Authorization': `key ${API_KEY}` }
+            headers: { 'Authorization': `key ${activeKey}` }
         });
         
         if (!response.ok) throw new Error('Not found');
