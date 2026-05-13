@@ -87,6 +87,35 @@ function applyThemeToggleVisibility() {
 }
 
 /**
+ * Update API Key display state in settings
+ */
+function updateApiKeyUI() {
+    const inputArea = document.getElementById('apiInputArea');
+    const actionsArea = document.getElementById('apiActionsArea');
+    if (!inputArea || !actionsArea) return;
+
+    inputArea.classList.toggle('hidden', !!userApiKey);
+    actionsArea.classList.toggle('hidden', !userApiKey);
+}
+
+/**
+ * Manually show input to edit key
+ */
+function showApiKeyInput() {
+    document.getElementById('apiInputArea').classList.remove('hidden');
+    document.getElementById('apiActionsArea').classList.add('hidden');
+    document.getElementById('settingsApiKey').focus();
+}
+
+/**
+ * Toggle API Key input visibility (password vs text)
+ */
+function toggleApiKeyVisibility() {
+    const input = document.getElementById('settingsApiKey');
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+/**
  * Update custom color and apply to theme
  */
 function updateCustomColor(hex) {
@@ -143,7 +172,7 @@ function renderColorList(items) {
         listContainer.innerHTML = `
             <div class="flex flex-col items-center justify-center p-8 text-center opacity-50">
                 <div class="text-[10px] uppercase tracking-tighter mb-2">No color data found</div>
-                <div class="text-[9px] text-red-400 uppercase">Check API Key in config.js</div>
+                <div class="text-[9px] text-red-400 uppercase">Check API Key in Settings</div>
             </div>`;
         return;
     }

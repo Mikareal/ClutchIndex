@@ -206,6 +206,7 @@ function openSettings() {
     // Update API Key field
     const apiKeyInput = document.getElementById('settingsApiKey');
     if (apiKeyInput) apiKeyInput.value = userApiKey;
+    updateApiKeyUI();
     
     // Update color display checkboxes
     const colorTextToggle = document.getElementById('colorTextToggle');
@@ -223,6 +224,15 @@ function openSettings() {
  */
 function closeSettings() {
     document.getElementById('settingsModal').classList.add('hidden');
+}
+
+/**
+ * Wrapper for deleting API key with confirmation
+ */
+function removeApiKey() {
+    if (confirm("Clear custom API key? The app will revert to the default configuration.")) {
+        deleteUserApiKey();
+    }
 }
 
 // --- Inspection Modal ---

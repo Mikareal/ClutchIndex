@@ -115,9 +115,25 @@
                 </div>
                 <div class="pb-6 border-b border-[var(--border-medium)]">
                     <h3 class="text-[10px] text-slate-500 uppercase mb-3 tracking-wider">API Configuration</h3>
-                    <div class="space-y-2">
-                        <input type="password" id="settingsApiKey" placeholder="Rebrickable API Key" onblur="saveUserApiKey(this.value)" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-4 py-3 text-xs outline-none focus:border-accent transition-colors">
-                        <p class="text-[9px] text-slate-500 uppercase tracking-widest">Your key is stored locally in your browser and never shared.</p>
+                    <div id="apiInputArea" class="space-y-2">
+                        <div class="relative">
+                            <input type="password" id="settingsApiKey" placeholder="Rebrickable API Key" onblur="saveUserApiKey(this.value)" onkeydown="if(event.key === 'Enter') { this.blur(); }" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-4 py-3 text-xs outline-none focus:border-accent transition-colors pr-20">
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                <button onclick="toggleApiKeyVisibility()" class="text-slate-500 hover:text-accent transition-colors p-1" title="Toggle Visibility"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
+                                <span id="apiKeySaveStatus" class="text-[9px] text-green-400 uppercase tracking-widest hidden">Saved!</span>
+                            </div>
+                        </div>
+                        <p class="text-[9px] text-slate-500 uppercase tracking-widest">Your key is stored locally in your browser and never shared. <a href="https://rebrickable.com/api/" target="_blank" class="text-accent hover:underline">Get one here</a>.</p>
+                    </div>
+                    <div id="apiActionsArea" class="hidden flex items-center justify-between p-3 bg-white/5 rounded border border-[var(--border-light)] hover:border-[var(--border-medium)] transition-colors">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] text-green-400 uppercase tracking-widest font-bold">Key Configured</span>
+                            <span class="text-[8px] text-slate-500 uppercase">Connection Active</span>
+                        </div>
+                        <div class="flex gap-4">
+                            <button onclick="showApiKeyInput()" class="text-[10px] text-accent uppercase hover:underline font-bold tracking-tighter">Edit</button>
+                            <button onclick="removeApiKey()" class="text-[10px] text-red-500 uppercase hover:underline font-bold tracking-tighter">Delete</button>
+                        </div>
                     </div>
                 </div>
                 <div class="pb-6 border-b border-[var(--border-medium)]">

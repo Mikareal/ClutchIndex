@@ -101,9 +101,74 @@ function toggleShowThemeToggle() {
  * Save User API Key
  */
 function saveUserApiKey(key) {
-    userApiKey = key.trim();
-    localStorage.setItem('clutchIndex_userApiKey', userApiKey);
-    fetchColors().then(() => renderInventory());
+    const trimmedKey = key.trim();
+
+    // If input is cleared, treat it as a request to revert to default
+    if (!trimmedKey) {
+        deleteUserApiKey();
+        return;
+    }
+
+    const statusSpan = document.getElementById('apiKeySaveStatus');
+    if (statusSpan) {
+        statusSpan.innerText = 'Validating...';
+        statusSpan.classList.remove('hidden', 'text-green-400', 'text-red-400');
+        statusSpan.classList.add('text-slate-400');
+    }
+
+    // Test the new key before committing to state
+    fetchColors(trimmedKey).then((fetchedColors) => {
+        if (fetchedColors && fetchedColors.length > 0) {
+            userApiKey = trimmedKey;
+            localStorage.setItem('clutchIndex_userApiKey', userApiKey);
+            updateApiKeyUI();
+            refreshAllParts(); // Re-fetch images/descriptions with new key
+            if (statusSpan) {
+                statusSpan.innerText = 'Saved!';
+                statusSpan.classList.remove('text-slate-400');
+                statusSpan.classList.add('text-green-400');
+                setTimeout(() => statusSpan.classList.add('hidden'), 2000);
+            }
+        } else {
+            throw new Error('Empty Results');
+        }
+    }).catch((err) => {
+        if (statusSpan) {
+            if (err.message.startsWith('429:')) {
+                const seconds = err.message.split(':')[1];
+                statusSpan.innerText = `Wait ${seconds}s`;
+                statusSpan.classList.remove('text-red-400', 'text-slate-400');
+                statusSpan.classList.add('text-amber-400');
+            } else {
+                statusSpan.innerText = err.message.includes('401') ? 'Invalid Key' : 'API Error';
+                statusSpan.classList.remove('text-slate-400', 'text-amber-400');
+                statusSpan.classList.add('text-red-400');
+            }
+            setTimeout(() => statusSpan.classList.add('hidden'), 5000);
+        }
+    });
+}
+
+/**
+ * Remove API Key from state and storage
+ */
+function deleteUserApiKey() {
+    userApiKey = '';
+    localStorage.removeItem('clutchIndex_userApiKey');
+    
+    // Clear global color state to ensure old key data doesn't persist
+    colors = [];
+    
+    // Clear the input field in the UI
+    const apiKeyInput = document.getElementById('settingsApiKey');
+    if (apiKeyInput) apiKeyInput.value = '';
+
+    updateApiKeyUI();
+    
+    // Re-fetch using fallback key from config.js to prevent "bugging out"
+    fetchColors().then(() => {
+        renderInventory();
+    });
 }
 
 /**
@@ -165,7 +230,7 @@ function updatePartID(index, val) {
  */
 function updateColorID(index, val) {
     inventory[index].colorID = val.trim();
-    localStorage.setItem('clutchIndex_data', JSON.stringify(inventory));
+    saveToStorage();
 }
 
 /**

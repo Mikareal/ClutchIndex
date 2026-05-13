@@ -6,13 +6,17 @@
 // --- Color Management ---
 /**
  * Fetch all available LEGO colors from Rebrickable API
+ * @param {string} overrideKey - Optional key to test for validation
  */
-async function fetchColors() {
+async function fetchColors(overrideKey = null) {
     // Priority: 1. User-provided key in storage | 2. Hardcoded key in config.js
-    const activeKey = userApiKey || (typeof API_KEY !== 'undefined' ? API_KEY : '');
+    let activeKey = overrideKey || userApiKey;
+    if (!activeKey && typeof API_KEY !== 'undefined') {
+        activeKey = API_KEY;
+    }
 
     if (!activeKey || activeKey.includes('your_rebrickable')) {
-        console.warn('ClutchIndex: No valid API_KEY found. Please enter one in Settings.');
+        console.warn('ClutchIndex: No valid Rebrickable API key found. Please enter one in Settings.');
         return [];
     }
 
@@ -21,14 +25,20 @@ async function fetchColors() {
             headers: { 'Authorization': `key ${activeKey}` }
         });
         
-        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        if (!response.ok) {
+            if (response.status === 429) {
+                const retryAfter = response.headers.get('Retry-After') || '60';
+                throw new Error(`429:${retryAfter}`);
+            }
+            console.error(`ClutchIndex API Error: ${response.status} ${response.statusText}`);
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const data = await response.json();
         colors = data.results || [];
         return colors;
     } catch (e) {
         console.error('Failed to fetch colors:', e);
-        colors = [];
         return [];
     }
 }
