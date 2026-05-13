@@ -8,15 +8,24 @@
  * Fetch all available LEGO colors from Rebrickable API
  */
 async function fetchColors() {
+    if (typeof API_KEY === 'undefined' || !API_KEY || API_KEY.includes('your_rebrickable')) {
+        console.error('ClutchIndex: API_KEY is missing or invalid. Check config.js');
+        return [];
+    }
+
     try {
         const response = await fetch(`https://rebrickable.com/api/v3/lego/colors/?page_size=1000&ordering=name`, {
             headers: { 'Authorization': `key ${API_KEY}` }
         });
+        
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        
         const data = await response.json();
-        colors = data.results;
+        colors = data.results || [];
         return colors;
     } catch (e) {
         console.error('Failed to fetch colors:', e);
+        colors = [];
         return [];
     }
 }

@@ -202,7 +202,16 @@ function openSettings() {
     // Ensure dropdowns reflect current state
     const themeSelect = document.getElementById('themeSelect');
     if (themeSelect) themeSelect.value = currentTheme;
-    document.getElementById('modeSelect').value = currentMode;
+    
+    // Update color display checkboxes
+    const colorTextToggle = document.getElementById('colorTextToggle');
+    if (colorTextToggle) colorTextToggle.checked = showColorText;
+    const colorSquareToggle = document.getElementById('colorSquareToggle');
+    if (colorSquareToggle) colorSquareToggle.checked = showColorSquares;
+    const instantTranslationToggle = document.getElementById('instantTranslationToggle');
+    if (instantTranslationToggle) instantTranslationToggle.checked = instantColorTranslation;
+    const showThemeToggleCheckbox = document.getElementById('showThemeToggleCheckbox');
+    if (showThemeToggleCheckbox) showThemeToggleCheckbox.checked = showThemeToggle;
 }
 
 /**

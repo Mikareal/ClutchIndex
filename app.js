@@ -30,13 +30,25 @@ function initApp() {
     document.documentElement.setAttribute('data-theme', currentTheme);
     setMode(currentMode);
     setTheme(currentTheme);
+    applyThemeToggleVisibility();
 
     // Initialize UI
     switchLayout(currentLayout);
 
+    // Pre-fetch colors to populate inventory color names/squares
+    fetchColors().then(() => renderInventory());
+
     // Initialize Density UI
     const densityIndicator = document.getElementById('densityIndicator');
     if (densityIndicator) densityIndicator.style.left = isCompact ? '50%' : '0';
+
+    // Render inventory and hide skeleton
+    renderInventory();
+    
+    // Simulate loading with a small delay for visual effect (150ms)
+    setTimeout(() => {
+        hideSkeletonLoader();
+    }, 150);
 
     // Set up event listeners
     initializeEventListeners();

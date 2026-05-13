@@ -1,7 +1,30 @@
 /**
- * UI MODULE
- * Handles all DOM rendering and visual updates
+ * Hide skeleton loader and show main content
  */
+function hideSkeletonLoader() {
+    const skeleton = document.getElementById('skeletonLoader');
+    const mainContent = document.getElementById('mainContent');
+    
+    if (skeleton && mainContent) {
+        skeleton.style.display = 'none';
+        mainContent.classList.remove('hidden');
+        mainContent.classList.add('animate-fade');
+    }
+}
+
+/**
+ * Show skeleton loader and hide main content
+ */
+function showSkeletonLoader() {
+    const skeleton = document.getElementById('skeletonLoader');
+    const mainContent = document.getElementById('mainContent');
+    
+    if (skeleton && mainContent) {
+        skeleton.style.display = 'block';
+        mainContent.classList.add('hidden');
+        mainContent.classList.remove('animate-fade');
+    }
+}
 
 // --- Appearance Management ---
 /**
@@ -51,8 +74,16 @@ function setMode(mode) {
     saveMode(mode);
     document.documentElement.setAttribute('data-mode', mode);
     document.documentElement.classList.toggle('dark', mode === 'dark');
-    const modeSelect = document.getElementById('modeSelect');
-    if (modeSelect) modeSelect.value = mode;
+    const modeToggle = document.getElementById('darkModeToggle');
+    if (modeToggle) modeToggle.checked = (mode === 'dark');
+}
+
+/**
+ * Apply visibility of the theme toggle in the header
+ */
+function applyThemeToggleVisibility() {
+    const container = document.getElementById('themeToggleContainer');
+    if (container) container.classList.toggle('hidden', !showThemeToggle);
 }
 
 /**
@@ -74,20 +105,49 @@ function updateCustomColor(hex) {
  */
 async function toggleColorSidebar() {
     const sidebar = document.getElementById('colorSidebar');
+    const listContainer = document.getElementById('colorList');
     const isHidden = sidebar.classList.contains('translate-x-full');
     
     if (isHidden) {
         sidebar.classList.remove('translate-x-full');
-        if (colors.length === 0) {
+        // Always render if opening, but only fetch if we don't have data
+        if (!colors || colors.length === 0) {
+            listContainer.innerHTML = '<div class="text-center p-8 text-[10px] text-slate-500 animate-pulse uppercase tracking-widest">Fetching Colors...</div>';
             const fetched = await fetchColors();
             renderColorList(fetched);
+        } else {
+            renderColorList(colors);
         }
     } else {
         sidebar.classList.add('translate-x-full');
     }
 }
+
+/**
+ * Filter color list based on search input
+ */
+function filterColorList(query) {
+    if (!colors) return;
+    const q = query.toLowerCase();
+    const filtered = colors.filter(c => 
+        c.name.toLowerCase().includes(q) || 
+        c.id.toString().includes(q)
+    );
+    renderColorList(filtered);
+}
+
 function renderColorList(items) {
     const listContainer = document.getElementById('colorList');
+
+    if (!items || items.length === 0) {
+        listContainer.innerHTML = `
+            <div class="flex flex-col items-center justify-center p-8 text-center opacity-50">
+                <div class="text-[10px] uppercase tracking-tighter mb-2">No color data found</div>
+                <div class="text-[9px] text-red-400 uppercase">Check API Key in config.js</div>
+            </div>`;
+        return;
+    }
+
     listContainer.innerHTML = '';
     items.forEach(c => {
         const div = document.createElement('div');
@@ -105,6 +165,66 @@ function renderColorList(items) {
         `;
         listContainer.appendChild(div);
     });
+}
+
+/**
+ * Get display text for color column (ID vs Name)
+ */
+function getColorDisplayText(colorID) {
+    if (!instantColorTranslation || !colorID) return colorID || 'Default';
+    const color = findColorByID(colorID);
+    return color ? color.name : colorID;
+}
+
+/**
+ * Handle focus on color ID field (Swap Name to ID for editing)
+ */
+function handleColorFocus(index, el) {
+    if (instantColorTranslation) {
+        el.innerText = inventory[index].colorID || 'Default';
+    }
+}
+
+/**
+ * Handle blur on color ID field (Swap ID to Name for display)
+ */
+function handleColorBlur(index, el) {
+    const val = el.innerText.trim();
+    updateColorID(index, val);
+    const hex = getColorHex(val);
+    if (instantColorTranslation) {
+        el.innerText = getColorDisplayText(val);
+    }
+    el.style.color = (showColorText && hex) ? hex : '';
+}
+
+/**
+ * Live update color visuals while typing in the table
+ */
+function liveUpdateColorID(index, el) {
+    const val = el.innerText.trim();
+    const hex = getColorHex(val);
+    const colorObj = findColorByID(val);
+    const container = el.parentElement;
+    const square = container.querySelector('.live-color-square');
+
+    if (square) {
+        if (val && hex) {
+            square.style.backgroundColor = hex;
+            square.title = colorObj ? colorObj.name : 'Unknown Color';
+            square.classList.remove('hidden');
+        } else {
+            square.classList.add('hidden');
+        }
+    }
+    
+    if (showColorText && hex) {
+        el.style.color = hex;
+    } else {
+        el.style.color = '';
+    }
+
+    inventory[index].colorID = val;
 }
 
 // --- Inventory Rendering ---
@@ -146,21 +266,23 @@ function renderTable() {
     
     inventory.forEach((item, index) => {
         const row = document.createElement('tr');
-        row.className = `hover:bg-[var(--bg-hover)] transition-colors group ${isCompact ? 'compact-row' : 'py-2'}`;
+        row.className = `hover:bg-[var(--bg-hover)] transition-colors group ${isCompact ? 'compact-row' : 'py-2'} border-b border-[var(--border-light)]`;
         
         const thumbSize = isCompact ? 'w-8 h-8' : 'w-12 h-12 border border-[var(--border-medium)]';
         const fontSize = isCompact ? 'text-xs' : 'text-sm';
+        const cellPadding = isCompact ? 'px-2' : 'px-4';
+        const qtyPadding = isCompact ? 'px-3' : 'px-6';
 
-        const brickContent = `<img src="${item.imageURL}" alt="${item.partID}" class="object-contain w-full h-full img-glow cursor-zoom-in" onclick="event.stopPropagation(); inspectPart('${item.imageURL}', '${item.partID}', '${item.description}')">
+        const brickContent = `<img src="${item.imageURL}" alt="${item.partID}" class="object-contain w-full h-full img-glow cursor-zoom-in transition-transform hover:scale-110" onclick="event.stopPropagation(); inspectPart('${item.imageURL}', '${item.partID}', '${item.description}')">
                <div class="hover-preview glass p-1 w-32 h-32 bottom-0 left-14 border border-accent/20"><img src="${item.imageURL}" class="w-full h-full object-contain"></div>`;
 
         row.innerHTML = `
-            <td class="px-2 text-center">
-                <div class="${thumbSize} mx-auto bg-black flex items-center justify-center overflow-hidden relative preview-container">
+            <td class="${cellPadding} text-center">
+                <div class="${thumbSize} mx-auto bg-black flex items-center justify-center overflow-hidden relative preview-container rounded border border-[var(--border-light)] hover:border-[var(--accent)] transition-colors">
                     ${brickContent}
                 </div>
             </td>
-            <td class="px-4 mono ${fontSize} font-bold inline-editable relative text-center" style="color: var(--accent)"
+            <td class="${cellPadding} mono ${fontSize} font-bold inline-editable relative text-center" style="color: var(--accent)"
                 contenteditable="true" spellcheck="false"
                 onblur="updatePartID(${index}, this.innerText); renderInventory();"
                 onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }">
@@ -169,28 +291,36 @@ function renderTable() {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 </button>
             </td>
-            <td class="px-4 ${fontSize} italic cursor-edit hover:text-white transition-colors truncate max-w-[200px] sm:max-w-xs text-slate-400 inline-editable" style="color: var(--text-dim)"
+            <td class="${cellPadding} text-center ${fontSize} italic cursor-edit hover:text-white transition-colors truncate max-w-[200px] sm:max-w-xs inline-editable" style="color: var(--text-secondary)"
                 contenteditable="true" 
                 spellcheck="false"
                 onblur="updateDescription(${index}, this.innerText)"
                 onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }">
                 ${item.description}
             </td>
-            <td class="px-4 mono text-[10px] uppercase tracking-widest inline-editable text-slate-500" style="color: var(--text-dim)"
-                contenteditable="true" spellcheck="false"
-                onblur="updateColorID(${index}, this.innerText)"
-                onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }">
-                ${item.colorID || 'Default'}
+            <td class="${cellPadding} text-center">
+                <div class="inline-flex items-center justify-center gap-2">
+                    ${showColorSquares ? `<div class="live-color-square w-4 h-4 border border-white/30 rounded-sm flex-shrink-0 ${!item.colorID || !getColorHex(item.colorID) ? 'hidden' : ''}" style="background-color: ${getColorHex(item.colorID) || '#ffffff'}" title="${findColorByID(item.colorID)?.name || 'Default Color'}"></div>` : ''}
+                    <span class="live-color-text mono text-[10px] uppercase tracking-widest inline-editable"
+                        contenteditable="true" spellcheck="false" style="${showColorText && getColorHex(item.colorID) ? `color: ${getColorHex(item.colorID)}` : ''}"
+                        title="${findColorByID(item.colorID)?.name || 'Click to edit ID'}"
+                        oninput="liveUpdateColorID(${index}, this)"
+                        onfocus="handleColorFocus(${index}, this)"
+                        onblur="handleColorBlur(${index}, this)"
+                        onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }">
+                        ${getColorDisplayText(item.colorID)}
+                    </span>
+                </div>
             </td>
-            <td class="px-6 text-right mono ${fontSize} font-bold inline-editable" style="color: var(--accent)"
+            <td class="${qtyPadding} text-right mono ${fontSize} font-bold inline-editable" style="color: var(--accent)"
                 contenteditable="true"
                 spellcheck="false"
                 onblur="updateQuantity(${index}, this.innerText)"
                 onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }">
                 ${item.quantity}
             </td>
-            <td class="px-6 text-right text-slate-700" style="color: var(--text-dim)">
-                <button onclick="deleteItem(${index})" class="hover:text-red-500 transition-colors">
+            <td class="${qtyPadding} text-right">
+                <button onclick="deleteItem(${index})" class="text-slate-500 hover:text-red-500 transition-colors hover:scale-110 active:scale-95" title="Delete item">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
             </td>
@@ -213,25 +343,30 @@ function renderGrid() {
     gridView.classList.remove('hidden');
     
     gridView.className = isCompact 
-        ? "grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-px bg-[var(--border-light)] border border-[var(--border-medium)]"
-        : "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-px bg-[var(--border-light)] border border-[var(--border-medium)]";
+        ? "grid grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-px bg-[var(--border-light)] border border-[var(--border-medium)] rounded grid-view"
+        : "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-px bg-[var(--border-light)] border border-[var(--border-medium)] rounded grid-view";
 
     const fragment = document.createDocumentFragment();
     
     inventory.forEach((item, index) => {
         const card = document.createElement('div');
-        card.className = `bg-[var(--bg-secondary)] border border-[var(--border-medium)] aspect-square flex flex-col ${isCompact ? 'p-2' : 'p-4'} group hover:border-[var(--accent)] transition-all relative`;
-        
+        card.className = `bg-[var(--bg-secondary)] border border-[var(--border-light)] aspect-square flex flex-col ${isCompact ? 'p-2' : 'p-4'} group hover:border-[var(--accent)] transition-all relative grid-card`;
+
+        const gridColorText = (!isCompact && instantColorTranslation) ? getColorDisplayText(item.colorID) : (item.colorID ? 'C' + item.colorID : 'DEF');
+
         card.innerHTML = `
-            <div class="flex-grow flex items-center justify-center overflow-hidden mb-2 cursor-zoom-in" onclick="inspectPart('${item.imageURL}', '${item.partID}', '${item.description}')">
-                <img src="${item.imageURL}" class="object-contain w-full h-full img-glow group-hover:scale-110 transition-transform">
+            <div class="flex-grow flex items-center justify-center overflow-hidden mb-2 cursor-zoom-in group-hover:scale-105 transition-transform duration-300" onclick="inspectPart('${item.imageURL}', '${item.partID}', '${item.description}')">
+                <img src="${item.imageURL}" class="object-contain w-full h-full img-glow">
             </div>
-            <div class="flex justify-between items-end cursor-pointer hover:bg-white/10 p-1 -m-1 rounded transition-colors" onclick="openGridEdit(${index})">
-                <div class="mono text-[10px] font-bold" style="color: var(--accent)">${item.partID}</div>
-                <div class="flex flex-col items-end">
-                    <div class="mono text-[8px] text-slate-500" style="color: var(--text-dim)">${item.colorID ? 'COL ' + item.colorID : ''}</div>
-                    <div class="mono text-xs font-bold" style="color: var(--accent)">x${item.quantity}</div>
+            <div class="flex justify-between items-end cursor-pointer hover:bg-white/10 p-2 -m-2 rounded transition-colors" onclick="openGridEdit(${index})">
+                <div>
+                    <div class="mono text-[10px] font-bold leading-tight" style="color: var(--accent)">${item.partID}</div>
+                    <div class="mono text-[8px] mt-0.5 flex items-center gap-1" style="${showColorText && getColorHex(item.colorID) ? `color: ${getColorHex(item.colorID)}` : 'color: var(--text-tertiary)'}">
+                        ${showColorSquares && item.colorID ? `<div class="w-3 h-3 border border-white/30 rounded-sm flex-shrink-0" style="background-color: ${getColorHex(item.colorID) || '#ffffff'}" title="${findColorByID(item.colorID)?.name || ''}"></div>` : ''}
+                        <span>${gridColorText}</span>
+                    </div>
                 </div>
+                <div class="mono text-xs font-bold text-right" style="color: var(--accent)">x${item.quantity}</div>
             </div>
         `;
         fragment.appendChild(card);

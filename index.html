@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Immediate theme/mode application to prevent "flashbang" on refresh
+        (function() {
+            const mode = localStorage.getItem('clutchIndex_mode') || 'dark';
+            const theme = localStorage.getItem('clutchIndex_theme') || 'cyan';
+            document.documentElement.setAttribute('data-mode', mode);
+            document.documentElement.setAttribute('data-theme', theme);
+            if (mode === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
     <title>ClutchIndex — LEGO Inventory Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -14,6 +24,11 @@
     <!-- Header -->
     <header class="border-b sticky top-0 z-50 glass border-[var(--border-medium)] shadow-sm">
         <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div id="themeToggleContainer" class="flex items-center mr-4">
+                <input id="darkModeToggle" class="theme-toggle" type="checkbox" role="switch" onchange="setMode(this.checked ? 'dark' : 'light')">
+                <label for="darkModeToggle" class="sr-only">Toggle Dark Mode</label>
+            </div>
+
             <div class="flex items-center gap-3">
                 <img src="CI_LOGO.png" alt="CI Logo" class="w-10 h-10 object-contain">
                 <h1 class="text-xl font-bold tracking-tight uppercase">CLUTCH<span class="text-accent">INDEX</span></h1>
@@ -99,11 +114,29 @@
                     </div>
                 </div>
                 <div class="pb-6 border-b border-[var(--border-medium)]">
-                    <h3 class="text-[10px] text-slate-500 uppercase mb-3 tracking-wider">Appearance</h3>
-                    <select id="modeSelect" onchange="setMode(this.value)" class="w-full bg-[var(--bg-tertiary)] border border-[var(--border-medium)] px-4 py-3 text-xs outline-none focus:border-accent transition-colors cursor-pointer" style="color: inherit">
-                        <option value="dark">Night Mode (Dark)</option>
-                        <option value="light">Day Mode (Light)</option>
-                    </select>
+                    <h3 class="text-[10px] text-slate-500 uppercase mb-4 tracking-wider">Color Display</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded border border-[var(--border-light)] hover:border-[var(--border-medium)] transition-colors">
+                            <input type="checkbox" id="colorTextToggle" onchange="toggleColorText()" class="w-4 h-4 accent-cyan-400">
+                            <label for="colorTextToggle" class="text-[10px] text-slate-300 uppercase tracking-wider cursor-pointer flex-grow">Color ID Text</label>
+                            <span class="text-[9px] text-slate-500">Show color ID in its actual color</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded border border-[var(--border-light)] hover:border-[var(--border-medium)] transition-colors">
+                            <input type="checkbox" id="colorSquareToggle" onchange="toggleColorSquares()" class="w-4 h-4 accent-cyan-400">
+                            <label for="colorSquareToggle" class="text-[10px] text-slate-300 uppercase tracking-wider cursor-pointer flex-grow">Color Squares</label>
+                            <span class="text-[9px] text-slate-500">Show small color squares</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded border border-[var(--border-light)] hover:border-[var(--border-medium)] transition-colors">
+                            <input type="checkbox" id="instantTranslationToggle" onchange="toggleInstantTranslation()" class="w-4 h-4 accent-cyan-400">
+                            <label for="instantTranslationToggle" class="text-[10px] text-slate-300 uppercase tracking-wider cursor-pointer flex-grow">Auto-Translate Names</label>
+                            <span class="text-[9px] text-slate-500">Show color names instead of IDs</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-white/5 rounded border border-[var(--border-light)] hover:border-[var(--border-medium)] transition-colors">
+                            <input type="checkbox" id="showThemeToggleCheckbox" onchange="toggleShowThemeToggle()" class="w-4 h-4 accent-cyan-400">
+                            <label for="showThemeToggleCheckbox" class="text-[10px] text-slate-300 uppercase tracking-wider cursor-pointer flex-grow">Header Theme Switch</label>
+                            <span class="text-[9px] text-slate-500">Show Day/Night toggle in header</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="pb-6 border-b border-[var(--border-medium)]">
                     <h3 class="text-[10px] text-slate-500 uppercase mb-3 tracking-wider">Data</h3>
@@ -254,6 +287,48 @@
     </div>
 
     <main class="flex-grow max-w-7xl mx-auto w-full px-6 py-12">
+        <!-- Skeleton Loader -->
+        <div id="skeletonLoader" class="space-y-12">
+            <!-- Skeleton Add Section -->
+            <section class="mb-12 border-l-2 bg-[var(--bg-secondary)] p-8 rounded-r border-[var(--border-medium)] animate-pulse">
+                <div class="h-4 bg-[var(--bg-tertiary)] rounded w-24 mb-6"></div>
+                <div class="flex flex-wrap gap-8">
+                    <div class="flex-grow max-w-md space-y-2">
+                        <div class="h-3 bg-[var(--bg-tertiary)] rounded w-20 mb-2"></div>
+                        <div class="h-10 bg-[var(--bg-tertiary)] rounded w-full"></div>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="h-10 bg-[var(--bg-tertiary)] rounded w-32"></div>
+                        <div class="h-10 bg-[var(--bg-tertiary)] rounded w-32"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skeleton Table -->
+            <div class="border border-[var(--border-medium)] bg-[var(--bg-secondary)] rounded overflow-hidden animate-pulse">
+                <div class="space-y-0">
+                    <!-- Header -->
+                    <div class="grid grid-cols-6 bg-[var(--bg-tertiary)] border-b border-[var(--border-medium)]">
+                        <div class="px-4 py-3 h-8 bg-[var(--bg-secondary)]"></div>
+                        <div class="px-4 py-3 h-8 bg-[var(--bg-secondary)]"></div>
+                        <div class="px-4 py-3 h-8 bg-[var(--bg-secondary)]"></div>
+                        <div class="px-4 py-3 h-8 bg-[var(--bg-secondary)]"></div>
+                        <div class="px-4 py-3 h-8 bg-[var(--bg-secondary)]"></div>
+                        <div class="px-4 py-3 h-8 bg-[var(--bg-secondary)]"></div>
+                    </div>
+                    <!-- Rows -->
+                    <div class="space-y-px bg-[var(--border-light)]">
+                        <div class="grid grid-cols-6 gap-px bg-[var(--bg-secondary)] p-px"><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div></div>
+                        <div class="grid grid-cols-6 gap-px bg-[var(--bg-secondary)] p-px"><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div></div>
+                        <div class="grid grid-cols-6 gap-px bg-[var(--bg-secondary)] p-px"><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div></div>
+                        <div class="grid grid-cols-6 gap-px bg-[var(--bg-secondary)] p-px"><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div><div class="h-14 bg-[var(--bg-tertiary)]"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actual Content (hidden initially) -->
+        <div id="mainContent" class="hidden">
         <!-- Import Section -->
         <section class="mb-12 border-l-2 border-accent bg-white/5 p-8 rounded-r" style="background: var(--bg-surface); border-color: var(--accent)">
             <h2 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)] mb-6 opacity-60">Add Inventory</h2>
@@ -318,7 +393,7 @@
                                 <th class="px-4 py-3 w-[80px] text-center">Image</th>
                                 <th class="px-4 py-3 w-[160px] text-center">Part ID</th>
                                 <th class="px-4 py-3">Description</th>
-                                <th class="px-4 py-3 w-[120px]">Color</th>
+                                <th class="px-4 py-3 w-[120px] text-center">Color</th>
                                 <th class="px-6 py-3 w-[100px] text-right">Qty</th>
                                 <th class="px-4 py-3 w-[80px] text-right">Actions</th>
                             </tr>
@@ -332,6 +407,7 @@
             <div id="gridView" class="hidden grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-px bg-white/5 border border-[var(--border-medium)] rounded" style="background: var(--bg-surface)">
                 <!-- Grid items generated by JS -->
             </div>
+        </div>
         </div>
     </main>
     <!-- Application Modules (loaded in dependency order) -->

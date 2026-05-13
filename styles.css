@@ -184,9 +184,24 @@ select option {
     }
 }
 
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
 .animate-fade { animation: fadeIn 0.3s ease-out; }
 .animate-slide { animation: slideIn 0.3s ease-out; }
 .modal-fade { animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+.animate-pulse {
+    background: linear-gradient(90deg, var(--bg-tertiary) 0%, var(--bg-hover) 50%, var(--bg-tertiary) 100%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
 
 /* Glass & Card Effects */
 .glass { 
@@ -224,7 +239,7 @@ input::placeholder, textarea::placeholder {
 
 input:hover, select:hover, textarea:hover {
     border-color: var(--border-medium);
-    background: var(--bg-hover);
+    background-color: var(--bg-hover);
 }
 
 input:focus, select:focus, textarea:focus {
@@ -257,12 +272,12 @@ input[type="radio"] {
 input[type="checkbox"]:hover,
 input[type="radio"]:hover {
     border-color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.05);
+    background-color: rgba(var(--accent-rgb), 0.05);
 }
 
 input[type="checkbox"]:checked,
 input[type="radio"]:checked {
-    background: var(--accent);
+    background-color: var(--accent);
     border-color: var(--accent);
     color: #000;
 }
@@ -292,11 +307,19 @@ input[type="checkbox"]:checked::after {
     transition: all 0.15s ease;
     border-radius: 3px;
     border: 1px solid transparent;
+    padding: 0.25rem 0.5rem;
+    margin: -0.25rem -0.5rem;
 }
 
 .inline-editable:hover {
-    background: rgba(var(--accent-rgb), 0.03);
-    border-color: var(--border-medium);
+    background: rgba(var(--accent-rgb), 0.05);
+    border-color: var(--border-light);
+}
+
+.inline-editable:focus {
+    background: rgba(var(--accent-rgb), 0.1);
+    border-color: var(--accent);
+    outline: none;
 }
 
 /* File Input */
@@ -325,11 +348,12 @@ input[type="file"]::file-selector-button:hover {
 
 /* Compact Mode */
 .compact-row { 
-    height: 40px !important; 
+    height: 34px !important; 
 }
 .compact-row td { 
-    padding: 0 4px !important; 
-    font-size: 0.75rem; 
+    padding: 2px 4px !important; 
+    font-size: 11px; 
+    line-height: 1;
     border-bottom: 1px solid var(--border-light);
 }
 
@@ -347,6 +371,81 @@ input[type="file"]::file-selector-button:hover {
 .preview-container:hover .hover-preview { 
     display: block; 
     animation: fadeIn 0.2s ease-out;
+}
+
+/* Custom Theme Toggle Switch */
+input.theme-toggle {
+    all: unset; /* Kill the global checkbox "square" bug */
+    --dur: 0.5s;
+    position: relative;
+    width: 44px;
+    height: 22px;
+    background-color: #87ceeb; /* Day Sky */
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all var(--dur) cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* The Track Icons (Sun/Moon/Stars) */
+input.theme-toggle {
+    background-image: 
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" opacity="0.6"><circle cx="4" cy="4" r="0.5"/><circle cx="12" cy="14" r="0.5"/><circle cx="18" cy="6" r="0.5"/><circle cx="8" cy="18" r="0.8"/></svg>');
+    background-position: center 40px; /* Hidden by default */
+    background-repeat: no-repeat;
+}
+
+input.theme-toggle:checked {
+    background-color: #2c3e50; /* Night Sky */
+    background-position: center; /* Show Stars */
+}
+
+/* The Knob */
+input.theme-toggle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px; 
+    height: 18px;
+    background-color: #f1c40f; /* Sun Color */
+    border-radius: 50%;
+    transition: all var(--dur) cubic-bezier(0.5, 1.5, 0.5, 1);
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.4);
+    z-index: 2;
+}
+
+/* Moon Crescent Effect */
+input.theme-toggle::after {
+    content: '' !important; /* Fix the global checkmark bug */
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: transparent;
+    transition: all var(--dur) cubic-bezier(0.5, 1.5, 0.5, 1);
+    transform: translate(-10px, -10px); /* Hidden off-knob */
+    z-index: 3;
+}
+
+input.theme-toggle:checked::before {
+    transform: translateX(22px);
+    background-color: #ecf0f1; /* Moon Base Color */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+input.theme-toggle:checked::after {
+    transform: translateX(26px); /* Moves into position to "bite" the moon */
+    background-color: #2c3e50; /* Same as background to create crescent */
 }
 
 .img-glow { 
@@ -378,7 +477,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(var(--accent-rgb), 0.08);
     box-shadow: inset 4px 0 0 var(--accent);
 }
 
@@ -394,6 +493,80 @@ th {
     font-size: 0.75rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+}
+
+/* Enhanced Table Row Styling */
+tbody tr {
+    background: var(--bg-secondary);
+}
+
+tbody tr td {
+    padding: 1rem;
+}
+
+tbody tr:first-child {
+    border-top: 1px solid var(--border-light);
+}
+
+tbody tr:last-child {
+    border-bottom: 2px solid var(--border-light);
+}
+
+tbody tr:hover {
+    background: rgba(var(--accent-rgb), 0.08);
+    box-shadow: inset 4px 0 0 var(--accent);
+}
+
+/* Better preview container styling */
+.preview-container {
+    background: #000;
+    overflow: hidden;
+}
+
+.preview-container img {
+    transition: transform 0.2s ease;
+}
+
+.preview-container:hover img {
+    transform: scale(1.08);
+}
+
+/* Grid Cards Styling */
+.grid-view {
+    gap: 1px;
+    background: var(--border-light);
+}
+
+.grid-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.grid-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0) 0%, rgba(var(--accent-rgb), 0.08) 100%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.grid-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.2), inset 0 0 0 1px rgba(var(--accent-rgb), 0.1);
+    transform: translateY(-2px);
+}
+
+.grid-card:hover::before {
+    opacity: 1;
 }
 
 /* Modal Styling */
